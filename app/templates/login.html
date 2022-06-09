@@ -1,0 +1,41 @@
+<div class="row justify-content-center mt-5">
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header text-center">
+                <h1>Login</h1>
+            </div>
+            <div class="card-body text-center">
+                {% if not current_user.is_authenticated %}
+                <form id="login" method="POST" action="{{ url_for('auth.do_login') }}">
+                    <div class="row">
+                        <div class="col-xl-12">
+                            <input required type="text" id="usr" name="usr" class="form-control form-control-solid" placeholder="Username">
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-xl-12">
+                            <input required type="password" id="pwd" name="pwd" class="form-control form-control-solid" placeholder="Password">
+                        </div>
+                    </div>
+                    <!-- <div class="row mt-2">
+                        <div class="col-xl-12">
+                            <div class="form-check">
+                                <input type="checkbox" id="keep" name="keep" class="form-check-input">
+                                <label for="keep" class="form-check-label">Keep me logged in</label>
+                            </div>
+                        </div>
+                    </div> -->
+                    <div class="row mt-5">
+                        <div class="col-xl-12">
+                            <input type="submit" class="btn btn-primary btn-lg" value="Login">
+                        </div>
+                    </div>
+                </form>
+                {% else %}
+                <p>Bem-vindo, {{ current_user.nome }}. <a href="{{ url_for('auth.logout') }}">Sair</a></p>
+                <p>{{ current_user.cpf }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
