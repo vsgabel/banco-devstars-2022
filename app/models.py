@@ -35,6 +35,15 @@ class User(db.Model, UserMixin):
         if not self.role:
             self.role = Role.query.filter_by(padrao=True).first()
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nome": self.nome,
+            "cpf": self.cpf,
+            "email": self.email,
+            "criado_em": self.criado_em
+        }
+
     @property
     def senha(self):
         raise AttributeError("Este não é um atributo que possa ser lido")
