@@ -4,61 +4,43 @@ from flask import jsonify, request, g
 from app.models import Conta, Permission
 from app.util import requisitos
 from .authentication import auth
-from .decorators import permission_required
+from .decorators import campos_obrigatorios, permission_required
 
 @api_v1.route("/depositar", methods=['PUT'])
+@campos_obrigatorios(['conta', 'valor'])
 def depositar():
     dados = request.get_json()
-    obrigatorios = ['conta', 'valor']
-    
-    requisitos(obrigatorios, dados.keys())
 
     valor = float(dados['valor'])
-    if valor > 0:
-        conta = Conta.query.filter_by(id=dados['conta'], enabled=True).first()
-        if conta:
-            conta.saldo += valor
-            db.session.add(conta)
-            db.session.commit()
-
-            return jsonify({"status": "success", "message": "Depósito efetuado"})
+    conta = Conta.query.filter_by(id=dados['conta'], enabled=True).first()
+    if not conta:
         return jsonify({"status": "error", "message": "A conta não pode ser encontrada"})
-    return jsonify({"status": "error", "message": "Valor inválido"})
+
+    return jsonify(conta.depositar(valor))
 
 @api_v1.route("/sacar", methods=['PUT'])
 @auth.login_required
 @permission_required(Permission.USAR)
+@campos_obrigatorios(['conta', 'valor'])
 def sacar():
     dados = request.get_json()
-    obrigatorios = ['conta', 'valor']
-    
-    requisitos(obrigatorios, dados.keys())
 
     valor = float(dados['valor'])
-    if valor > 0:
-        conta = Conta.query.filter_by(id=dados['conta'], enabled=True).first()
-        if conta:
-            if conta.titular_id == g.current_user.id:
-                if conta.saldo >= valor:
-                    conta.saldo -= valor
-                    db.session.add(conta)
-                    db.session.commit()
-
-                    return jsonify({"status": "success", "message": "Saque efetuado"})
-                
-                return jsonify({"status": "error", "message": "Saldo insuficiente"})
-            return jsonify({"status": "error", "message": "Não possui autorização para sacar desta conta."})
+    conta = Conta.query.filter_by(id=dados['conta'], enabled=True).first()
+    if not conta:
         return jsonify({"status": "error", "message": "A conta não pode ser encontrada"})
-    return jsonify({"status": "error", "message": "Valor inválido"})
+    
+    if not conta.titular_id == g.current_user.id:
+        return jsonify({"status": "error", "message": "Não possui autorização para sacar desta conta."})
+
+    return jsonify(conta.sacar(valor))
 
 @api_v1.route("/transferir", methods=['PUT'])
 @auth.login_required
 @permission_required(Permission.USAR)
+@campos_obrigatorios(['conta_saida', 'conta_entrada', 'valor'])
 def transferir():
     dados = request.get_json()
-    obrigatorios = ['conta_saida', 'conta_entrada', 'valor']
-    
-    requisitos(obrigatorios, dados.keys())
 
     conta_saida = Conta.query.filter_by(id=dados['conta_saida'], enabled=True).first()
     conta_entrada = Conta.query.filter_by(id=dados['conta_entrada'], enabled=True).first()

@@ -1,5 +1,6 @@
 from functools import wraps
-from flask import g, abort
+from flask import g, abort, request
+from app.util import requisitos
 
 def permission_required(permission):
     def decorator(f):
@@ -7,6 +8,16 @@ def permission_required(permission):
         def decorated_function(*args, **kwargs):
             if not g.current_user.role.has_permission(permission):
                 abort(403)
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def campos_obrigatorios(campos):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            dados = request.get_json()
+            requisitos(campos, dados.keys())
             return f(*args, **kwargs)
         return decorated_function
     return decorator

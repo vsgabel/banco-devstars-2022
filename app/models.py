@@ -137,3 +137,22 @@ class Conta(db.Model):
 
         return {"status": "success", "message": "Operação efetuada com sucesso"}
 
+    def sacar(self, valor):
+        if valor > 0:
+            if self.saldo >= valor:
+                self.saldo -= valor
+                db.session.add(self)
+                db.session.commit()
+
+                return {"status": "success", "message": "Saque efetuado"}
+            return {"status": "error", "message": "Saldo insuficiente"}      
+        return {"status": "error", "message": "Valor inválido"}
+
+    def depositar(self, valor):
+        if valor > 0:
+            self.saldo += valor
+            db.session.add(self)
+            db.session.commit()
+
+            return {"status": "success", "message": "Depósito efetuado"}
+        return {"status": "error", "message": "Valor inválido"}

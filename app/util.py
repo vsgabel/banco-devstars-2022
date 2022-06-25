@@ -2,6 +2,7 @@ import jwt
 import datetime
 import time
 from app.models import User
+from flask import abort
 
 def requisitos(campos, chaves):
     falta = []
