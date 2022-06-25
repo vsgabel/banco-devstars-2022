@@ -1,19 +1,15 @@
+from math import perm
 from app.api.v1 import api_v1
 from flask import abort, jsonify, request
-from app.models import User
+from app.models import User, Permission
+from .authentication import auth
+from .decorators import permission_required
 from app import db
-
-def requisitos(campos, chaves):
-    falta = []
-
-    for campo in campos:
-        if campo not in chaves:
-            falta.append(campo)        
-    
-    if falta:
-        abort(422, f"O(s) campo(s) {falta} é(são) obrigatório(s)")
+from app.util import requisitos
 
 @api_v1.route("/usuarios")
+@auth.login_required
+@permission_required(Permission.ADMIN)
 def usuarios():
     users_raw = User.query.all()
     users = []

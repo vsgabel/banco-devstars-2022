@@ -1,4 +1,7 @@
 from email.policy import default
+from flask import jsonify
+
+from sqlalchemy import null
 from app import db, login_manager
 from datetime import datetime
 from flask_login import UserMixin
@@ -28,6 +31,7 @@ class User(db.Model, UserMixin):
     ativo = db.Column(db.Boolean, default=True)
 
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+    contas = db.relationship('Conta', backref="titular")
 
     def __init__(self):
         self.criado_em = datetime.now()
@@ -68,7 +72,7 @@ class Role(db.Model):
     def insert_roles():
         roles = {
             'desabilitado': [],
-            'usuario': [Permission.USAR],
+            'usuario': [Permission.USAR, Permission.CRIAR],
             'funcionario': [Permission.CRIAR, Permission.ALTERAR_LIMITE, Permission.DESABILITAR],
             'admin': [Permission.USAR, Permission.CRIAR, Permission.ALTERAR_LIMITE, Permission.DESABILITAR, Permission.ADMIN]
         }
@@ -101,3 +105,35 @@ class Role(db.Model):
 
     def has_permission(self, perm):
         return self.perm & perm == perm
+
+class Conta(db.Model):
+    __tablename__ = "contas"
+    id = db.Column(db.Integer, primary_key=True)
+    saldo = db.Column(db.Float)
+    enabled = db.Column(db.Boolean, nullable=False, default=True)
+
+    titular_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    @staticmethod
+    def transfere(conta_saida, conta_entrada, valor):
+        if valor <= 0:
+            return {"status": "error", "message": "Valor inválido"}
+        
+        if conta_saida.saldo < valor:
+            return {"status": "error", "message": "Saldo insuficiente"}
+        
+        if not conta_saida.enabled or not conta_entrada.enabled:
+            return {"status": "error", "message": "Uma das contas está desabilitada"}
+
+        if conta_entrada.id == conta_saida.id:
+            return {"status": "error", "message": "Transferência entre a mesma conta"}
+
+        conta_saida.saldo -= valor
+        conta_entrada.saldo += valor
+
+        db.session.add(conta_saida)
+        db.session.add(conta_entrada)
+        db.session.commit()
+
+        return {"status": "success", "message": "Operação efetuada com sucesso"}
+

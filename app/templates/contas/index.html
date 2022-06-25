@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <h2>Lista de Contas</h2>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Número da Conta</th>
+                        <th>Saldo</th>
+                        {% if tipo == "admin" %}
+                        <th>Titular</th>
+                        <th>Status</th>
+                        {% endif %}
+                        <th>Opções</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if not contas %}
+                        <tr>
+                            <td class="text-center" colspan="3">Este usuário não tem contas</td>
+                        </tr>
+                    {% else %}
+                        {% for conta in contas %}
+                            <tr>
+                                <td>{{ conta.id }}</td>
+                                <td>{{ conta.saldo }}</td>
+                                {% if tipo == "admin" %}
+                                <td>{{ conta.titular.nome }}</td>
+                                <td>{% if conta.enabled %} Habilitada {% else %} Desabilitada {% endif %}</td>
+                                {% endif %}
+                                <td>
+                                    {% if conta.enabled %}
+                                    <a href="{{ url_for('contas.desabilitar', id=conta.id) }}" class="btn btn-danger btn-icon"><i class="fa-solid fa-x"></i></a>
+                                    {% else %}
+                                    <a href="{{ url_for('contas.habilitar', id=conta.id) }}" class="btn btn-success btn-icon"><i class="fa-solid fa-check"></i></a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
