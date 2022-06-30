@@ -2,6 +2,8 @@ import os
 
 class Config:
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    if "postgres://" in SQLALCHEMY_DATABASE_URI:
+        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgres://", "postgresql://")
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS")
     SECRET_KEY = os.getenv("SECRET_KEY")
     SSL_REDIRECT = False
