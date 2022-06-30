@@ -1,1 +1,1 @@
-web: waitress-serve --port=8000 credit:app
+web: waitress-serve --port=$PORT credit:app
