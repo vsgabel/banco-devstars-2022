@@ -16,6 +16,10 @@ def perfil():
     <p>{current_user.cpf}</p>
     """
 
+@main.route("/erro")
+def erro():
+    return int('erro')
+
 @main.route("/funcionario")
 @login_required
 @criar_required

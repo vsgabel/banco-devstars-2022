@@ -1,0 +1,13 @@
+Exception on /erro [GET]
+Traceback (most recent call last):
+  File "C:\Users\Victor\Documents\DevStars\credit_aula\venv\lib\site-packages\flask\app.py", line 2077, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Victor\Documents\DevStars\credit_aula\venv\lib\site-packages\flask\app.py", line 1525, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Victor\Documents\DevStars\credit_aula\venv\lib\site-packages\flask\app.py", line 1523, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Victor\Documents\DevStars\credit_aula\venv\lib\site-packages\flask\app.py", line 1509, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "C:\Users\Victor\Documents\DevStars\credit_aula\app\main\views.py", line 21, in erro
+    return int('erro')
+ValueError: invalid literal for int() with base 10: 'erro'
