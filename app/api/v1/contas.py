@@ -2,9 +2,54 @@ from app import db
 from app.api.v1 import api_v1
 from flask import jsonify, request, g
 from app.models import Conta, Permission
-from app.util import requisitos
 from .authentication import auth
 from .decorators import campos_obrigatorios, permission_required
+
+@api_v1.route("/conta", methods=['POST'])
+@auth.login_required
+@permission_required(Permission.CRIAR)
+@campos_obrigatorios(['titular_id'])
+def cria_conta():
+    dados = request.get_json()
+    conta = Conta(dados['titular_id'])
+    if 'saldo' in dados.keys():
+        conta.saldo = float(dados['saldo'])
+    db.session.add(conta)
+    db.session.commit()
+
+    return jsonify({"status": "success", "message": "Conta criada com sucesso"})
+
+@api_v1.route("/conta")
+@auth.login_required
+@permission_required(Permission.USAR)
+@campos_obrigatorios(['conta_id'])
+def get_conta():
+    dados = request.get_json()
+    conta = Conta.query.filter_by(id=dados['conta_id'], enabled=True).first()
+    if not conta:
+        return jsonify({"status": "error", "message": "Conta inexistente ou inativada"})
+    if g.current_user.id != conta.titular_id:
+        return jsonify({"status": "error", "message": "Usuário não é o titular"})
+    return jsonify({"status": "success", "message": "", "data": conta.to_dict()})
+
+@api_v1.route("/conta", methods=["DELETE"])
+@auth.login_required
+@permission_required(Permission.ADMIN)
+@campos_obrigatorios(['conta_id'])
+def delete_conta():
+    dados = request.get_json()
+    conta = Conta.query.filter_by(id=dados['conta_id'], enabled=True).first()
+    
+    if not conta:
+        return jsonify({"status": "error", "message": "Conta inexistente ou desativada"})
+    if conta.saldo > 0:
+        return jsonify({"status": "error", "message": "Conta ainda possui dinheiro."})
+    
+    conta.enabled = False
+    db.session.add(conta)
+    db.session.commit()
+
+    return jsonify({"status": "success", "message": "Conta desativada com sucesso."})
 
 @api_v1.route("/depositar", methods=['PUT'])
 @campos_obrigatorios(['conta', 'valor'])

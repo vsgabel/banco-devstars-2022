@@ -1,9 +1,6 @@
-from email.policy import default
-from flask import jsonify
-
-from sqlalchemy import null
+from faker import Faker
 from app import db, login_manager
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -32,6 +29,7 @@ class User(db.Model, UserMixin):
 
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     contas = db.relationship('Conta', backref="titular")
+    cartoes = db.relationship('Cartao', backref="titular")
 
     def __init__(self):
         self.criado_em = datetime.now()
@@ -58,7 +56,6 @@ class User(db.Model, UserMixin):
 
     def verify_password(self, senha):
         return check_password_hash(self.senha_hash, senha)
-
 
 class Role(db.Model):
     __tablename__ = "roles"
@@ -156,3 +153,47 @@ class Conta(db.Model):
 
             return {"status": "success", "message": "Depósito efetuado"}
         return {"status": "error", "message": "Valor inválido"}
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "saldo": self.saldo,
+            "titular": self.titular.nome
+        }
+
+class Cartao(db.Model):
+    __tablename__ = 'cartoes'
+    id = db.Column(db.Integer, primary_key=True)
+    bandeira = db.Column(db.String(16))
+    numero = db.Column(db.String(64), unique=True)
+    cvc = db.Column(db.String(4))
+    validade = db.Column(db.Date)
+    limite = db.Column(db.Float)
+    enabled = db.Column(db.Boolean, default=True)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    def __init__(self, anos=10):
+        f = Faker('pt-BR')
+        cartao = f.credit_card_full().split("\n")
+        self.validade = datetime.now() + timedelta(days=365*anos)
+        self.bandeira = "VISA" if "VISA" in cartao[0] else "JCB" if "JCB" in cartao[0] else cartao[0]
+        self.cvc = cartao[3].replace("CVC: ", "").replace("CVV: ", "")
+        self.numero = cartao[2].split(" ")[0]
+
+    def __repr__(self):
+        return '<Cartão %r>' % self.number
+
+    def verify(self, numero, cvc, validade):
+        if self.numero == numero and self.cvc == cvc and self.validade == validade:
+            return True
+        return False
+
+    def to_dict(self):
+        return {
+            "bandeira": self.bandeira,
+            "numero": self.numero,
+            "cvc": self.cvc,
+            "validade": self.validade,
+            "limite": self.limite
+        }
